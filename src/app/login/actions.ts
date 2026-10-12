@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
@@ -16,9 +17,12 @@ export async function login(formData: FormData) {
 
 export async function signup(formData: FormData) {
   const supabase = await createClient();
+  const origin = (await headers()).get("origin");
   const { error } = await supabase.auth.signUp({
     email: String(formData.get("email")),
     password: String(formData.get("password")),
+    // El link del email de confirmación vuelve a esta misma app (local o Vercel).
+    options: { emailRedirectTo: `${origin}/auth/callback` },
   });
 
   if (error) redirect(`/login?error=${encodeURIComponent(error.message)}`);
